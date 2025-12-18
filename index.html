@@ -9,6 +9,7 @@
         --primary-color: #1e3c72;
         --accent-color: #ffd700;
         --bg-color: #f4f6f9;
+        --btn-color: #333;
     }
 
     body {
@@ -58,9 +59,15 @@
         box-shadow: 0 4px 10px rgba(30, 60, 114, 0.3);
     }
 
-    .shuffle-btn {
-        padding: 12px 30px;
-        background-color: #333;
+    /* 버튼 그룹 (섞기 & 정답보기) */
+    .action-buttons {
+        display: flex;
+        gap: 10px;
+    }
+
+    .action-btn {
+        padding: 12px 25px;
+        background-color: var(--btn-color);
         color: #fff;
         border: none;
         border-radius: 50px;
@@ -72,10 +79,14 @@
         transition: transform 0.2s, background-color 0.2s;
         box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     }
-    .shuffle-btn:hover { background-color: #555; transform: translateY(-2px); }
-    .shuffle-btn:active { transform: scale(0.95); }
-    /* 미리보기 중 클릭 방지 스타일 */
-    .shuffle-btn:disabled { background-color: #ccc; cursor: not-allowed; transform: none; }
+    .action-btn:hover { background-color: #555; transform: translateY(-2px); }
+    .action-btn:active { transform: scale(0.95); }
+    .action-btn:disabled { background-color: #ccc; cursor: not-allowed; transform: none; }
+
+    /* 정답 보기 활성화 상태 스타일 */
+    .action-btn.hint-active {
+        background-color: #e74c3c; /* 붉은색 계열로 변경 */
+    }
 
     .game-board {
         display: grid;
@@ -179,9 +190,14 @@
             <button class="stage-btn" onclick="setStage(4)">4단계 (60장)</button>
         </nav>
         
-        <button class="shuffle-btn" id="shuffleBtn" onclick="shuffleBoard()">
-            🔀 카드 섞기
-        </button>
+        <div class="action-buttons">
+            <button class="action-btn" id="shuffleBtn" onclick="shuffleBoard()">
+                🔀 카드 섞기
+            </button>
+            <button class="action-btn" id="hintBtn" onclick="toggleHint()">
+                👁️ 정답 보기
+            </button>
+        </div>
     </div>
 
     <div class="game-board" id="gameBoard" data-stage="1"></div>
@@ -225,6 +241,7 @@
     let flippedCards = [];
     let matchedCount = 0;
     let isProcessing = false;
+    let isHintActive = false; // 정답 보기 상태 확인 변수
 
     setStage(1);
 
@@ -253,9 +270,16 @@
         flippedCards = [];
         matchedCount = 0;
         
-        // 1. 게임 시작 시 클릭 방지 (미리보기 동안)
+        // 초기화 시 상태 리셋
+        isHintActive = false;
+        const hintBtn = document.getElementById('hintBtn');
+        hintBtn.textContent = '👁️ 정답 보기';
+        hintBtn.classList.remove('hint-active');
+        
+        // 버튼 비활성화 (시작 모션 중)
         isProcessing = true; 
-        document.getElementById('shuffleBtn').disabled = true; // 섞기 버튼 비활성화
+        document.getElementById('shuffleBtn').disabled = true;
+        document.getElementById('hintBtn').disabled = true;
 
         const totalCards = stageConfig[currentStage];
         const pairsCount = totalCards / 2;
@@ -267,7 +291,7 @@
         gameDeck.forEach(imgUrl => {
             const card = document.createElement('div');
             card.classList.add('card');
-            card.classList.add('shuffling'); // 처음엔 섞이는 모션
+            card.classList.add('shuffling'); 
 
             card.innerHTML = `
                 <div class="card-face card-front"></div>
@@ -280,26 +304,60 @@
             board.appendChild(card);
         });
 
-        // 2. 시간차 로직 (섞기 -> 전체 보여주기 -> 다시 뒤집기)
         setTimeout(() => {
-            // (1) 0.6초 후: 섞는 모션 종료 및 전체 카드 오픈
             document.querySelectorAll('.card').forEach(c => {
                 c.classList.remove('shuffling');
-                c.classList.add('flipped'); // 강제 뒤집기 (보여주기)
+                c.classList.add('flipped'); 
             });
 
-            // (2) 그로부터 2초 후: 다시 덮기 및 게임 시작
             setTimeout(() => {
                 document.querySelectorAll('.card').forEach(c => {
                     c.classList.remove('flipped');
                 });
                 
-                isProcessing = false; // 클릭 잠금 해제
-                document.getElementById('shuffleBtn').disabled = false; // 섞기 버튼 활성화
+                isProcessing = false;
+                document.getElementById('shuffleBtn').disabled = false;
+                document.getElementById('hintBtn').disabled = false;
                 
-            }, 2000); // 2초 대기
+            }, 2000); 
 
-        }, 600); // 셔플 애니메이션(0.6초) 기다림
+        }, 600); 
+    }
+
+    // ✅ [추가] 정답 보기 토글 함수
+    function toggleHint() {
+        // 이미 매칭된 카드 제외하고 컨트롤
+        const cards = document.querySelectorAll('.card');
+        const btn = document.getElementById('hintBtn');
+
+        if (!isHintActive) {
+            // 정답 보기 (Show)
+            isHintActive = true;
+            isProcessing = true; // 정답 보는 동안 게임 정지
+            btn.textContent = '🙈 정답 가리기';
+            btn.classList.add('hint-active');
+
+            cards.forEach(card => {
+                if (!card.classList.contains('matched')) {
+                    card.classList.add('flipped');
+                }
+            });
+        } else {
+            // 정답 가리기 (Hide)
+            isHintActive = false;
+            isProcessing = false; // 게임 재개
+            btn.textContent = '👁️ 정답 보기';
+            btn.classList.remove('hint-active');
+            
+            // 선택 중이던 카드 초기화 (버그 방지)
+            flippedCards = []; 
+
+            cards.forEach(card => {
+                if (!card.classList.contains('matched')) {
+                    card.classList.remove('flipped');
+                }
+            });
+        }
     }
 
     function shuffleBoard() {
