@@ -60,7 +60,6 @@
         margin: 0 auto 40px auto;
     }
 
-    /* 단계별 그리드 설정 */
     .game-board[data-stage="1"] { grid-template-columns: repeat(5, 1fr); max-width: 600px; }
     .game-board[data-stage="2"] { grid-template-columns: repeat(5, 1fr); max-width: 700px; }
     .game-board[data-stage="3"] { grid-template-columns: repeat(8, 1fr); max-width: 900px; }
@@ -90,7 +89,6 @@
         overflow: hidden; 
     }
 
-    /* 카드 뒷면 (커버) */
     .card-front {
         background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
         color: rgba(255,255,255,0.2);
@@ -99,7 +97,6 @@
     }
     .card-front::after { content: '★'; }
 
-    /* 카드 앞면 (이미지) */
     .card-back {
         background-color: white;
         transform: rotateY(180deg);
@@ -158,6 +155,7 @@
     <div class="game-board" id="gameBoard" data-stage="1"></div>
 
 <script>
+    // 이미지 리스트
     const imgUrls = [
         "https://i.ibb.co/nHssMmS/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
         "https://i.ibb.co/YFRpkN29/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
@@ -190,18 +188,7 @@
         "https://i.ibb.co/5xFbpsvx/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
         "https://i.ibb.co/3yNn17tS/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
         "https://i.ibb.co/rG0NJTSJ/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png"
-        
     ];
-
-    // 이미지가 모자랄 경우 반복 함수
-    function getSafeImages(count) {
-        let result = [];
-        for(let i=0; i<count; i++) {
-            // 모자르면 리스트 처음으로
-            result.push(imgUrls[i % imgUrls.length]); 
-        }
-        return result;
-    }
 
     const stageConfig = { 1: 10, 2: 20, 3: 40, 4: 60 };
     let currentStage = 1;
@@ -221,6 +208,22 @@
         initGame();
     }
 
+    // 이미지 랜덤 선택 함수
+    function getRandomImages(count) {
+        let pool = [...imgUrls]; // 원본 목록 복사
+
+        // 만약 풀에 있는 이미지보다 더 많은 이미지가 필요하면 풀을 계속 복사해서 늘림
+        while (pool.length < count) {
+            pool = pool.concat(imgUrls);
+        }
+
+        // 전체 풀을 무작위로 섞습니다
+        shuffleArray(pool);
+
+        // 섞인 풀에서 필요한 개수만큼 앞에서부터 자릅니다.
+        return pool.slice(0, count);
+    }
+
     function initGame() {
         const board = document.getElementById('gameBoard');
         board.innerHTML = '';
@@ -231,11 +234,11 @@
         const totalCards = stageConfig[currentStage];
         const pairsCount = totalCards / 2;
         
-        // 필요한 개수만큼 이미지 가져오기
-        const selectedImages = getSafeImages(pairsCount);
+        // getRandomImages 함수를 사용하여 매번 다른 이미지를 가져옴
+        const selectedImages = getRandomImages(pairsCount);
         let gameDeck = [...selectedImages, ...selectedImages];
         
-        shuffleArray(gameDeck);
+        shuffleArray(gameDeck); // 덱 자체도 섞어서 카드 위치 랜덤화
 
         gameDeck.forEach(imgUrl => {
             const card = document.createElement('div');
@@ -275,7 +278,6 @@
         isProcessing = true;
         const [first, second] = flippedCards;
 
-        // 이미지 주소가 같으면 정답 처리
         if (first.imgUrl === second.imgUrl) {
             setTimeout(() => {
                 first.card.classList.add('matched');
