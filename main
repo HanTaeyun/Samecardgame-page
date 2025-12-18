@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>카드 뒤집기 게임</title>
+<style>
+    :root {
+        --primary-color: #1e3c72;
+        --accent-color: #ffd700;
+        --bg-color: #f4f6f9;
+    }
+
+    body {
+        font-family: 'Pretendard', sans-serif;
+        background-color: var(--bg-color);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 40px 10px;
+        margin: 0;
+        min-height: 100vh;
+    }
+
+    .stage-nav {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .stage-btn {
+        padding: 10px 20px;
+        background-color: white;
+        border: 1px solid #ddd;
+        border-radius: 50px;
+        cursor: pointer;
+        font-size: 0.95rem;
+        color: #666;
+        transition: all 0.2s;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+
+    .stage-btn:hover { background-color: #f9f9f9; color: #333; }
+    .stage-btn.active {
+        background-color: var(--primary-color);
+        color: white;
+        border-color: var(--primary-color);
+        font-weight: bold;
+        box-shadow: 0 4px 10px rgba(30, 60, 114, 0.3);
+    }
+
+    .game-board {
+        display: grid;
+        gap: 8px;
+        width: 100%;
+        max-width: 900px;
+        perspective: 1000px;
+        margin: 0 auto 40px auto;
+    }
+
+    /* 단계별 그리드 설정 */
+    .game-board[data-stage="1"] { grid-template-columns: repeat(5, 1fr); max-width: 600px; }
+    .game-board[data-stage="2"] { grid-template-columns: repeat(5, 1fr); max-width: 700px; }
+    .game-board[data-stage="3"] { grid-template-columns: repeat(8, 1fr); max-width: 900px; }
+    .game-board[data-stage="4"] { grid-template-columns: repeat(10, 1fr); max-width: 1000px; }
+
+    .card {
+        background-color: transparent;
+        position: relative;
+        cursor: pointer;
+        aspect-ratio: 3 / 4; 
+        transform-style: preserve-3d;
+        transition: transform 0.5s cubic-bezier(0.4, 0.0, 0.2, 1);
+        border-radius: 10px;
+    }
+
+    .card-face {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border-radius: 10px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        backface-visibility: hidden;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        font-weight: bold;
+        overflow: hidden; 
+    }
+
+    /* 카드 뒷면 (커버) */
+    .card-front {
+        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        color: rgba(255,255,255,0.2);
+        font-size: 1.5rem;
+        border: 2px solid white;
+    }
+    .card-front::after { content: '★'; }
+
+    /* 카드 앞면 (이미지) */
+    .card-back {
+        background-color: white;
+        transform: rotateY(180deg);
+        border: 2px solid #eee;
+        padding: 0; 
+    }
+
+    .card-back img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover; 
+        display: block;
+    }
+
+    .card.flipped { transform: rotateY(180deg); cursor: default; }
+    
+    .card.matched {
+        transform: rotateY(180deg);
+        cursor: default;
+        border: 3px solid var(--accent-color);
+        box-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
+        animation: popEffect 0.4s ease-out;
+    }
+
+    @keyframes popEffect {
+        0% { transform: rotateY(180deg) scale(1); }
+        50% { transform: rotateY(180deg) scale(1.1); }
+        100% { transform: rotateY(180deg) scale(1); }
+    }
+
+    .card.shuffling { animation: shuffleMix 0.6s ease-in-out; }
+    @keyframes shuffleMix {
+        0% { transform: scale(1); }
+        50% { transform: scale(0.8) translateY(-10px); }
+        100% { transform: scale(1); }
+    }
+
+    @media (max-width: 768px) {
+        .game-board { gap: 5px; padding: 0 10px; }
+        .game-board[data-stage="1"] { grid-template-columns: repeat(4, 1fr); }
+        .game-board[data-stage="2"] { grid-template-columns: repeat(4, 1fr); }
+        .game-board[data-stage="3"] { grid-template-columns: repeat(5, 1fr); }
+        .game-board[data-stage="4"] { grid-template-columns: repeat(6, 1fr); }
+    }
+</style>
+</head>
+<body>
+
+    <nav class="stage-nav">
+        <button class="stage-btn active" onclick="setStage(1)">1단계 (10장)</button>
+        <button class="stage-btn" onclick="setStage(2)">2단계 (20장)</button>
+        <button class="stage-btn" onclick="setStage(3)">3단계 (40장)</button>
+        <button class="stage-btn" onclick="setStage(4)">4단계 (60장)</button>
+    </nav>
+
+    <div class="game-board" id="gameBoard" data-stage="1"></div>
+
+<script>
+    const imgUrls = [
+        "https://i.ibb.co/nHssMmS/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+        "https://i.ibb.co/YFRpkN29/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+        "https://i.ibb.co/YBBh5BQb/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+        "https://i.ibb.co/WN0YSjpQ/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+        "https://i.ibb.co/VWK2r0ns/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+        "https://i.ibb.co/NgSqKjcV/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+        "https://i.ibb.co/SDBYcS69/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+        "https://i.ibb.co/nNR8G4wN/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+        "https://i.ibb.co/C3Xwnw7B/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+        "https://i.ibb.co/dwgYRL3w/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+        "https://i.ibb.co/G39JHfYP/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+        "https://i.ibb.co/cX7Ph3P8/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+        "https://i.ibb.co/VcGrZdw8/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+        "https://i.ibb.co/wZsFH5jd/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+        "https://i.ibb.co/hJdcLQt4/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+        "https://i.ibb.co/bjjKpPNt/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+        "https://i.ibb.co/MxnzX2Zb/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+        "https://i.ibb.co/Fq5Q1Z4x/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+        "https://i.ibb.co/hJYKqKfq/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+        "https://i.ibb.co/sdWrMVWj/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+        "https://i.ibb.co/s9L3QWrK/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+        "https://i.ibb.co/qFXhMsJB/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+        "https://i.ibb.co/gZSnVKGY/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+        "https://i.ibb.co/G4Sw4FXR/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+        "https://i.ibb.co/bj1ZgXDb/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+        "https://i.ibb.co/5x9jRYcL/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+        "https://i.ibb.co/MkxkNMT1/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+        "https://i.ibb.co/9xSN0px/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+        "https://i.ibb.co/5xFbpsvx/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+        "https://i.ibb.co/3yNn17tS/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+        "https://i.ibb.co/rG0NJTSJ/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png"
+        
+    ];
+
+    // 이미지가 모자랄 경우 반복 함수
+    function getSafeImages(count) {
+        let result = [];
+        for(let i=0; i<count; i++) {
+            // 모자르면 리스트 처음으로
+            result.push(imgUrls[i % imgUrls.length]); 
+        }
+        return result;
+    }
+
+    const stageConfig = { 1: 10, 2: 20, 3: 40, 4: 60 };
+    let currentStage = 1;
+    let flippedCards = [];
+    let matchedCount = 0;
+    let isProcessing = false;
+
+    setStage(1);
+
+    function setStage(stage) {
+        currentStage = stage;
+        document.querySelectorAll('.stage-btn').forEach((btn, idx) => {
+            btn.classList.toggle('active', idx + 1 === stage);
+        });
+        const board = document.getElementById('gameBoard');
+        board.setAttribute('data-stage', stage);
+        initGame();
+    }
+
+    function initGame() {
+        const board = document.getElementById('gameBoard');
+        board.innerHTML = '';
+        flippedCards = [];
+        matchedCount = 0;
+        isProcessing = false;
+
+        const totalCards = stageConfig[currentStage];
+        const pairsCount = totalCards / 2;
+        
+        // 필요한 개수만큼 이미지 가져오기
+        const selectedImages = getSafeImages(pairsCount);
+        let gameDeck = [...selectedImages, ...selectedImages];
+        
+        shuffleArray(gameDeck);
+
+        gameDeck.forEach(imgUrl => {
+            const card = document.createElement('div');
+            card.classList.add('card');
+            card.classList.add('shuffling');
+
+            card.innerHTML = `
+                <div class="card-face card-front"></div>
+                <div class="card-face card-back">
+                    <img src="${imgUrl}" alt="Game Card">
+                </div>
+            `;
+
+            card.addEventListener('click', () => flipCard(card, imgUrl));
+            board.appendChild(card);
+        });
+
+        setTimeout(() => {
+            document.querySelectorAll('.card').forEach(c => c.classList.remove('shuffling'));
+        }, 600);
+    }
+
+    function flipCard(card, imgUrl) {
+        if (card.classList.contains('flipped') || isProcessing || card.classList.contains('matched')) {
+            return;
+        }
+
+        card.classList.add('flipped');
+        flippedCards.push({ card, imgUrl });
+
+        if (flippedCards.length === 2) {
+            checkForMatch();
+        }
+    }
+
+    function checkForMatch() {
+        isProcessing = true;
+        const [first, second] = flippedCards;
+
+        // 이미지 주소가 같으면 정답 처리
+        if (first.imgUrl === second.imgUrl) {
+            setTimeout(() => {
+                first.card.classList.add('matched');
+                second.card.classList.add('matched');
+                matchedCount++;
+                flippedCards = [];
+                isProcessing = false;
+
+                if (matchedCount === stageConfig[currentStage] / 2) {
+                    setTimeout(() => alert("🎉 미션 성공! 모든 카드를 찾았습니다!"), 300);
+                }
+            }, 200);
+        } else {
+            setTimeout(() => {
+                first.card.classList.remove('flipped');
+                second.card.classList.remove('flipped');
+                flippedCards = [];
+                isProcessing = false;
+            }, 800);
+        }
+    }
+
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+    }
+</script>
+</body>
+</html>
