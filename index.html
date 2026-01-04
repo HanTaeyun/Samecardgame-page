@@ -327,15 +327,15 @@
         .game-board[data-stage="2"] { grid-template-columns: repeat(5, 1fr); max-width: 700px; }
         .game-board[data-stage="3"] { grid-template-columns: repeat(8, 1fr); max-width: 900px; }
         
-        /* LV.4 (60장): 15열 */
+        /* LV.4 (60장): 12열 */
         .game-board[data-stage="4"] { 
-            grid-template-columns: repeat(15, 1fr); 
-            max-width: 1400px; 
+            grid-template-columns: repeat(12, 1fr); 
+            max-width: 1300px; 
         }
         
-        /* BOSS (100장): 20열 */
+        /* BOSS (80장) -> 16열 */
         .game-board[data-stage="5"] { 
-            grid-template-columns: repeat(20, 1fr); 
+            grid-template-columns: repeat(16, 1fr); 
             max-width: 1600px; 
         }
 
@@ -372,7 +372,6 @@
             background-color: white;
             transform: rotateY(180deg);
             padding: 0;
-            /* 그림자 방향 반전 (-4px)으로 뒤집혔을 때 위치 보정 */
             box-shadow: -4px 4px 0 rgba(0,0,0,0.5);
         }
         
@@ -423,7 +422,7 @@
             .game-board[data-stage="2"] { grid-template-columns: repeat(4, 1fr); }
             .game-board[data-stage="3"] { grid-template-columns: repeat(5, 1fr); }
             .game-board[data-stage="4"] { grid-template-columns: repeat(6, 1fr); }
-            /* 모바일 보스 스테이지: 5열 (5x20) */
+            /* 모바일 보스 스테이지: 5열 (5x16) */
             .game-board[data-stage="5"] { grid-template-columns: repeat(5, 1fr); }
             
             .level-grid { grid-template-columns: 1fr; }
@@ -518,7 +517,7 @@
                 <button class="pixel-btn" onclick="startGame(4)">LV.4 (60장)</button>
             </div>
             
-            <button class="pixel-btn boss-btn" onclick="startGame(5)">☠️ BOSS (100장) ☠️</button>
+            <button class="pixel-btn boss-btn" onclick="startGame(5)">☠️ BOSS (80장) ☠️</button>
 
             <br>
             <button class="pixel-btn" style="background-color: #555; font-size: 0.7rem;" onclick="goBackFromLevel()">BACK</button>
@@ -675,11 +674,23 @@
             "https://i.ibb.co/9xSN0px/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
             "https://i.ibb.co/5xFbpsvx/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
             "https://i.ibb.co/3yNn17tS/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
-            "https://i.ibb.co/rG0NJTSJ/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png"
+            "https://i.ibb.co/rG0NJTSJ/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+            "https://i.ibb.co/d40RBjKD/image.png",
+            "https://i.ibb.co/r27B9XTT/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+            "https://i.ibb.co/1G0Hkrbk/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+            "https://i.ibb.co/J9zw35M/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+            "https://i.ibb.co/N611rsfN/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+            "https://i.ibb.co/whFt1wfY/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+            "https://i.ibb.co/VcjFKWbm/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+            "https://i.ibb.co/mVmcj6Vs/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+            "https://i.ibb.co/CsngyFQy/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+            "https://i.ibb.co/s9D3Ff6t/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+            "https://i.ibb.co/TMtD8xzP/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png"
+            
         ];
 
-        // 100장 스테이지(5단계) 추가
-        const stageConfig = { 1: 10, 2: 20, 3: 40, 4: 60, 5: 100 };
+        // 보스 스테이지
+        const stageConfig = { 1: 10, 2: 20, 3: 40, 4: 60, 5: 80 };
         let currentStage = 1;
         let flippedCards = [];
         let matchedCount = 0;
