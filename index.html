@@ -12,6 +12,12 @@
         /* =========================================
            1. 기본 설정 & 레트로 테마
            ========================================= */
+        
+        /* 테두리 포함 크기 계산 (레이아웃 틀어짐 방지) */
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
         :root {
             --bg-color: #1a1a2e;
             --main-color: #e94560;
@@ -34,7 +40,6 @@
             align-items: center;
             justify-content: center;
             overflow-x: hidden;
-            box-sizing: border-box;
             user-select: none;
         }
 
@@ -59,7 +64,7 @@
         .container {
             text-align: center;
             width: 100%;
-            max-width: 1000px;
+            max-width: 1800px;
         }
 
         .screen {
@@ -321,9 +326,18 @@
         .game-board[data-stage="1"] { grid-template-columns: repeat(5, 1fr); max-width: 600px; }
         .game-board[data-stage="2"] { grid-template-columns: repeat(5, 1fr); max-width: 700px; }
         .game-board[data-stage="3"] { grid-template-columns: repeat(8, 1fr); max-width: 900px; }
-        .game-board[data-stage="4"] { grid-template-columns: repeat(10, 1fr); max-width: 1100px; }
-        /* 보스 스테이지: 100장 (10열) */
-        .game-board[data-stage="5"] { grid-template-columns: repeat(10, 1fr); max-width: 1100px; }
+        
+        /* LV.4 (60장): 15열 */
+        .game-board[data-stage="4"] { 
+            grid-template-columns: repeat(15, 1fr); 
+            max-width: 1400px; 
+        }
+        
+        /* BOSS (100장): 20열 */
+        .game-board[data-stage="5"] { 
+            grid-template-columns: repeat(20, 1fr); 
+            max-width: 1600px; 
+        }
 
         .card {
             background-color: transparent;
@@ -358,6 +372,8 @@
             background-color: white;
             transform: rotateY(180deg);
             padding: 0;
+            /* 그림자 방향 반전 (-4px)으로 뒤집혔을 때 위치 보정 */
+            box-shadow: -4px 4px 0 rgba(0,0,0,0.5);
         }
         
         .card-back img {
