@@ -2,9 +2,12 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>같은 카드를 찾아라! (Multiplayer)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>같은 카드를 찾아라! (Retro Font)</title>
+    
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/neodgm/neodgm-webfont@latest/neodgm/style.css">
+
     <style>
         /* =========================================
            1. 기본 설정 & 레트로 테마
@@ -23,7 +26,8 @@
             padding: 20px;
             background-color: var(--bg-color);
             color: var(--text-color);
-            font-family: 'Press Start 2P', cursive;
+            /* 폰트 적용 순서: 영문(Press Start) -> 한글(NeoDunggeunmo) */
+            font-family: 'Press Start 2P', 'NeoDunggeunmo', cursive;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
@@ -61,13 +65,12 @@
         .screen {
             display: none;
             animation: fadeIn 0.5s;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
         }
         .screen.active {
             display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
         }
 
         /* 공통 픽셀 버튼 스타일 */
@@ -77,12 +80,13 @@
             border: none;
             padding: 15px 30px;
             font-size: 1rem;
-            font-family: inherit;
+            font-family: inherit; /* 상속받은 폰트 사용 */
             cursor: pointer;
             margin: 10px;
             box-shadow: -4px 0 0 0 black, 4px 0 0 0 black, 0 -4px 0 0 black, 0 4px 0 0 black, 6px 6px 0 0 rgba(0,0,0,0.5);
             transition: transform 0.1s;
             position: relative;
+            line-height: 1.2;
         }
 
         .pixel-btn:hover {
@@ -103,9 +107,36 @@
             box-shadow: none;
         }
 
-        /* =========================================
-           레트로 스타일 음소거 버튼 (ON/OFF)
-           ========================================= */
+        .rule-btn {
+            width: 250px;
+            font-size: 0.8rem;
+            margin: 10px auto;
+            display: block;
+        }
+
+        /* 보스 버튼 스타일 (검정/빨강) */
+        .boss-btn {
+            background-color: #000 !important;
+            color: #ff0000 !important;
+            border: 2px solid #ff0000 !important;
+            width: 90%; 
+            max-width: 400px;
+            margin-top: 20px;
+            animation: pulse-red 2s infinite;
+        }
+        
+        .boss-btn:hover {
+            background-color: #330000 !important;
+            transform: scale(1.05) !important;
+        }
+
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(255, 0, 0, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 0, 0, 0); }
+        }
+
+        /* 음소거 버튼 스타일 */
         .pixel-mute-btn {
             position: fixed;
             bottom: 30px;
@@ -113,7 +144,7 @@
             width: 80px;
             height: 50px;
             z-index: 1000;
-            font-family: 'Press Start 2P', cursive;
+            font-family: inherit;
             font-size: 1rem;
             color: white;
             border: none;
@@ -145,9 +176,7 @@
             text-shadow: 2px 2px 0 #000;
         }
 
-        /* =========================================
-            팀 수 설정 UI
-           ========================================= */
+        /* 팀 설정 UI */
         .team-counter {
             display: flex;
             align-items: center;
@@ -163,25 +192,23 @@
             color: #ffd700;
         }
 
-        /* =========================================
-            스코어보드 (게임 화면)
-           ========================================= */
+        /* 스코어보드 */
         .scoreboard {
             display: flex;
             flex-wrap: wrap;
-            gap: 15px;
+            gap: 10px;
             justify-content: center;
             margin-bottom: 20px;
             width: 100%;
-            max-width: 900px;
+            max-width: 1000px;
         }
 
         .team-score {
             background-color: #222;
             border: 2px solid #555;
-            padding: 10px 15px;
+            padding: 8px 10px;
             border-radius: 8px;
-            min-width: 100px;
+            min-width: 80px;
             text-align: center;
             position: relative;
             transition: all 0.3s;
@@ -199,19 +226,17 @@
         }
 
         .team-name {
-            font-size: 0.7rem;
+            font-size: 0.6rem;
             margin-bottom: 5px;
             color: var(--team-color);
         }
 
         .team-point {
-            font-size: 1.2rem;
+            font-size: 1rem;
             color: #fff;
         }
 
-        /* =========================================
-           커스텀 승리 팝업 (모달) 스타일
-           ========================================= */
+        /* 승리 팝업 */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -252,9 +277,7 @@
             100% { transform: scale(1); opacity: 1; }
         }
 
-        /* =========================================
-           화면 & 게임 보드 스타일
-           ========================================= */
+        /* 화면 및 보드 스타일 */
         .game-title {
             font-size: 3rem;
             color: var(--main-color);
@@ -299,6 +322,8 @@
         .game-board[data-stage="2"] { grid-template-columns: repeat(5, 1fr); max-width: 700px; }
         .game-board[data-stage="3"] { grid-template-columns: repeat(8, 1fr); max-width: 900px; }
         .game-board[data-stage="4"] { grid-template-columns: repeat(10, 1fr); max-width: 1100px; }
+        /* 보스 스테이지: 100장 (10열) */
+        .game-board[data-stage="5"] { grid-template-columns: repeat(10, 1fr); max-width: 1100px; }
 
         .card {
             background-color: transparent;
@@ -344,7 +369,6 @@
 
         .card.flipped { transform: rotateY(180deg); cursor: default; }
         
-        /* 매칭된 카드는 맞춘 팀의 색상으로 테두리가 변경됨 */
         .card.matched {
             transform: rotateY(180deg);
             cursor: default;
@@ -383,6 +407,9 @@
             .game-board[data-stage="2"] { grid-template-columns: repeat(4, 1fr); }
             .game-board[data-stage="3"] { grid-template-columns: repeat(5, 1fr); }
             .game-board[data-stage="4"] { grid-template-columns: repeat(6, 1fr); }
+            /* 모바일 보스 스테이지: 5열 (5x20) */
+            .game-board[data-stage="5"] { grid-template-columns: repeat(5, 1fr); }
+            
             .level-grid { grid-template-columns: 1fr; }
             .card-front { font-size: 1rem; }
             .pixel-mute-btn { width: 70px; height: 45px; bottom: 20px; right: 20px; font-size: 0.8rem; }
@@ -421,6 +448,8 @@
     <div id="mode-screen" class="screen container">
         <div class="level-box">
             <h2>SELECT MODE</h2>
+            <p style="margin: 20px 0; font-size: 1rem; color: #aaa;">모드를 선택하세요</p>
+            
             <div style="margin-top: 30px;">
                 <button class="pixel-btn" onclick="selectMode('single')">1 PLAYER</button>
                 <button class="pixel-btn" onclick="selectMode('multi')">MULTIPLAYER</button>
@@ -433,7 +462,7 @@
     <div id="team-setup-screen" class="screen container">
         <div class="level-box">
             <h2>TEAMS SETUP</h2>
-            <p style="margin: 20px 0; font-size: 0.8rem; color: #aaa;">HOW MANY TEAMS?</p>
+            <p style="margin: 20px 0; font-size: 1rem; color: #aaa;">팀 수를 선택해주세요 (MAX 16)</p>
             
             <div class="team-counter">
                 <button class="pixel-btn" onclick="adjustTeamCount(-1)">-</button>
@@ -441,16 +470,30 @@
                 <button class="pixel-btn" onclick="adjustTeamCount(1)">+</button>
             </div>
 
-            <button class="pixel-btn" onclick="confirmTeamSetup()">NEXT</button>
+            <button class="pixel-btn" onclick="showRuleSelect()">NEXT</button> 
             <br>
             <button class="pixel-btn" style="background-color: #555; font-size: 0.7rem;" onclick="showModeSelect()">BACK</button>
+        </div>
+    </div>
+
+    <div id="rule-setup-screen" class="screen container">
+        <div class="level-box">
+            <h2>GAME RULES</h2>
+            <p style="margin: 20px 0; font-size: 1rem; color: #aaa;">모드를 선택해주세요</p>
+            
+            <div style="margin-top: 20px;">
+                <button class="pixel-btn rule-btn" onclick="selectRule('continue')">ONE MORE TIME (Default)</button>
+                <button class="pixel-btn rule-btn" onclick="selectRule('pass')">PASS TURN (Fair)</button>
+            </div>
+            <br>
+            <button class="pixel-btn" style="background-color: #555; font-size: 0.7rem;" onclick="switchScreen('team-setup-screen')">BACK</button>
         </div>
     </div>
 
     <div id="level-screen" class="screen container">
         <div class="level-box">
             <h2>SELECT LEVEL</h2>
-            <p style="margin: 20px 0; font-size: 0.8rem; color: #aaa;">난이도를 선택하세요</p>
+            <p style="margin: 20px 0; font-size: 1rem; color: #aaa;">난이도를 선택하세요</p>
             
             <div class="level-grid">
                 <button class="pixel-btn" onclick="startGame(1)">LV.1 (10장)</button>
@@ -458,6 +501,9 @@
                 <button class="pixel-btn" onclick="startGame(3)">LV.3 (40장)</button>
                 <button class="pixel-btn" onclick="startGame(4)">LV.4 (60장)</button>
             </div>
+            
+            <button class="pixel-btn boss-btn" onclick="startGame(5)">☠️ BOSS (100장) ☠️</button>
+
             <br>
             <button class="pixel-btn" style="background-color: #555; font-size: 0.7rem;" onclick="goBackFromLevel()">BACK</button>
         </div>
@@ -501,7 +547,6 @@
 
             osc.type = type; 
             osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-            
             gainNode.gain.setValueAtTime(vol, audioCtx.currentTime);
             gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
 
@@ -553,81 +598,37 @@
         function playFailSound() { playTone(150, 'sawtooth', 0.2, 0.1); setTimeout(() => playTone(100, 'sawtooth', 0.3, 0.1), 150); }
         function playWinSound() { playTone(523.25, 'square', 0.1, 0.15); setTimeout(() => playTone(659.25, 'square', 0.1, 0.15), 100); setTimeout(() => playTone(783.99, 'square', 0.1, 0.15), 200); setTimeout(() => playTone(1046.50, 'square', 0.4, 0.15), 300); }
 
-        // === 화면 전환 로직 ===
         function switchScreen(screenId) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(screenId).classList.add('active');
         }
-
         function goHome() {
             document.getElementById('victory-modal').classList.add('hidden');
             switchScreen('intro-screen');
         }
 
-        // ===  게임 모드 및 팀 설정 변수 ===
-        let gameMode = 'single'; // 'single' or 'multi'
+        let gameMode = 'single';
+        let gameRule = 'continue';
         let totalTeams = 1;
-        let teams = []; // { id: 0, score: 0, color: '...' }
+        let teams = []; 
         let currentTeamIndex = 0;
+        const teamColors = [ '#e74c3c', '#3498db', '#2ecc71', '#f1c40f', '#9b59b6', '#e67e22', '#1abc9c', '#ff7979', '#badc58', '#95afc0', '#00ffff', '#ff00ff', '#808000', '#000080', '#800000', '#008080' ];
 
-        // 팀별 색상 (최대 10개)
-        const teamColors = [
-            '#e74c3c', // Red
-            '#3498db', // Blue
-            '#2ecc71', // Green
-            '#f1c40f', // Yellow
-            '#9b59b6', // Purple
-            '#e67e22', // Orange
-            '#1abc9c', // Teal
-            '#ff7979', // Pink
-            '#badc58', // Lime
-            '#95afc0'  // Grey Blue
-        ];
-
-        // 1. 모드 선택 화면으로 이동
-        function showModeSelect() {
-            switchScreen('mode-screen');
-        }
-
-        // 2. 모드 선택 처리
+        function showModeSelect() { switchScreen('mode-screen'); }
         function selectMode(mode) {
             gameMode = mode;
-            if (mode === 'single') {
-                totalTeams = 1;
-                switchScreen('level-screen');
-            } else {
-                totalTeams = 2; // 멀티플레이 기본 2팀
-                updateTeamCountDisplay();
-                switchScreen('team-setup-screen');
-            }
+            if (mode === 'single') { totalTeams = 1; gameRule = 'continue'; switchScreen('level-screen'); } 
+            else { totalTeams = 2; updateTeamCountDisplay(); switchScreen('team-setup-screen'); }
         }
-
-        // 3. 팀 개수 조절 (멀티플레이)
         function adjustTeamCount(delta) {
-            totalTeams += delta;
-            if (totalTeams < 2) totalTeams = 2;
-            if (totalTeams > 10) totalTeams = 10;
+            totalTeams += delta; if (totalTeams < 2) totalTeams = 2; if (totalTeams > 16) totalTeams = 16; 
             updateTeamCountDisplay();
         }
+        function updateTeamCountDisplay() { document.getElementById('team-count-display').textContent = totalTeams; }
+        function showRuleSelect() { switchScreen('rule-setup-screen'); }
+        function selectRule(rule) { gameRule = rule; switchScreen('level-screen'); }
+        function goBackFromLevel() { if (gameMode === 'single') showModeSelect(); else showRuleSelect(); }
 
-        function updateTeamCountDisplay() {
-            document.getElementById('team-count-display').textContent = totalTeams;
-        }
-
-        function confirmTeamSetup() {
-            switchScreen('level-screen');
-        }
-
-        // 4. 레벨 화면에서 뒤로가기
-        function goBackFromLevel() {
-            if (gameMode === 'single') {
-                showModeSelect();
-            } else {
-                switchScreen('team-setup-screen');
-            }
-        }
-
-        // === 게임 로직 ===
         const imgUrls = [
             "https://i.ibb.co/nHssMmS/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
             "https://i.ibb.co/YFRpkN29/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
@@ -661,7 +662,8 @@
             "https://i.ibb.co/rG0NJTSJ/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png"
         ];
 
-        const stageConfig = { 1: 10, 2: 20, 3: 40, 4: 60 };
+        // 100장 스테이지(5단계) 추가
+        const stageConfig = { 1: 10, 2: 20, 3: 40, 4: 60, 5: 100 };
         let currentStage = 1;
         let flippedCards = [];
         let matchedCount = 0;
@@ -681,7 +683,6 @@
         }
 
         function initGame() {
-            // 변수 초기화
             flippedCards = [];
             matchedCount = 0;
             isHintActive = false;
@@ -690,7 +691,7 @@
             document.getElementById('shuffleBtn').disabled = true;
             document.getElementById('hintBtn').disabled = true;
 
-            //  팀 초기화
+            // 팀 초기화
             teams = [];
             for (let i = 0; i < totalTeams; i++) {
                 teams.push({
@@ -700,10 +701,9 @@
                     color: teamColors[i % teamColors.length]
                 });
             }
-            currentTeamIndex = 0; // 첫 번째 팀부터 시작
-            renderScoreboard(); // 스코어보드 그리기
+            currentTeamIndex = 0; 
+            renderScoreboard(); 
 
-            // 보드 생성
             const board = document.getElementById('gameBoard');
             board.innerHTML = '';
             const totalCards = stageConfig[currentStage];
@@ -724,7 +724,6 @@
                 board.appendChild(card);
             });
 
-            // 시작 애니메이션
             setTimeout(() => {
                 document.querySelectorAll('.card').forEach(c => {
                     c.classList.remove('shuffling');
@@ -741,26 +740,23 @@
             }, 600); 
         }
 
-        //  스코어보드 렌더링 함수
         function renderScoreboard() {
             const scoreboard = document.getElementById('scoreboard');
             scoreboard.innerHTML = '';
 
-            // 싱글플레이면 스코어보드를 숨기거나 심플하게
             if (gameMode === 'single') {
-                // 싱글일 때는 굳이 팀 점수를 보여주지 않아도 되지만, 통일성을 위해 보여줌
-                // return; // 숨기고 싶으면 이 주석 해제
+                return; 
             }
 
             teams.forEach((team, index) => {
                 const scoreBox = document.createElement('div');
                 scoreBox.className = 'team-score';
-                scoreBox.style.setProperty('--team-color', team.color); // CSS 변수 전달
+                scoreBox.style.setProperty('--team-color', team.color); 
                 
-                // 현재 턴인 팀에게 active 클래스 부여
                 if (index === currentTeamIndex) {
                     scoreBox.classList.add('active');
                     scoreBox.style.borderColor = team.color;
+                    scoreBox.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
                 }
 
                 scoreBox.innerHTML = `
@@ -771,7 +767,6 @@
             });
         }
 
-        //  턴 넘기기
         function switchTurn() {
             currentTeamIndex = (currentTeamIndex + 1) % totalTeams;
             renderScoreboard();
@@ -796,18 +791,15 @@
             if (first.imgUrl === second.imgUrl) {
                 // 매칭 성공
                 playMatchSound();
-                
-                //  점수 올리기 (턴은 유지됨)
                 teams[currentTeamIndex].score++;
                 renderScoreboard();
 
                 setTimeout(() => {
-                    // 매칭된 카드에 팀 색상 테두리 적용
                     const currentColor = teams[currentTeamIndex].color;
                     first.card.style.borderColor = currentColor;
-                    first.card.style.boxShadow = `0 0 15px ${currentColor}`;
+                    first.card.style.boxShadow = `0 0 10px ${currentColor}`;
                     second.card.style.borderColor = currentColor;
-                    second.card.style.boxShadow = `0 0 15px ${currentColor}`;
+                    second.card.style.boxShadow = `0 0 10px ${currentColor}`;
 
                     first.card.classList.add('matched');
                     second.card.classList.add('matched');
@@ -816,10 +808,14 @@
                     flippedCards = [];
                     isProcessing = false;
 
-                    // 스테이지 클리어 체크
                     if (matchedCount === stageConfig[currentStage] / 2) {
                         playWinSound();
                         showVictoryResult();
+                    } else {
+                        // 룰에 따라 턴 처리
+                        if (gameMode === 'multi' && gameRule === 'pass') {
+                            switchTurn();
+                        }
                     }
                 }, 200);
             } else {
@@ -831,7 +827,6 @@
                     flippedCards = [];
                     isProcessing = false;
                     
-                    //  턴 넘기기 (매칭 실패 시에만)
                     if (gameMode === 'multi') {
                         switchTurn();
                     }
@@ -839,7 +834,6 @@
             }
         }
 
-        //  승리 결과 표시
         function showVictoryResult() {
             const title = document.getElementById('win-title');
             const msg = document.getElementById('win-msg');
@@ -848,7 +842,6 @@
                 title.innerHTML = '🎉 STAGE<br>CLEAR!';
                 msg.textContent = 'CONGRATULATIONS!';
             } else {
-                // 가장 높은 점수 찾기
                 const maxScore = Math.max(...teams.map(t => t.score));
                 const winners = teams.filter(t => t.score === maxScore);
 
@@ -879,7 +872,6 @@
             goBackFromLevel();
         }
 
-        // 기타 유틸리티
         function getRandomImages(count) {
             let pool = [...imgUrls]; 
             while (pool.length < count) pool = pool.concat(imgUrls);
