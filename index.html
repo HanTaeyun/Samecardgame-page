@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>같은 카드를 찾아라!</title>
+    <title>같은 카드를 찾아라! (Retro Font)</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/neodgm/neodgm-webfont@latest/neodgm/style.css">
@@ -13,7 +13,6 @@
            1. 기본 설정 & 레트로 테마
            ========================================= */
         
-        /* 테두리 포함 크기 계산 (레이아웃 틀어짐 방지) */
         *, *::before, *::after {
             box-sizing: border-box;
         }
@@ -25,6 +24,8 @@
             --text-color: #fff;
             --card-back: #16213e;
             --card-front: #e94560;
+            --undo-color: #f39c12;
+            --hover-glow: #ffd700; /* 호버 시 강조 색상 (골드) */
         }
 
         body {
@@ -32,7 +33,6 @@
             padding: 20px;
             background-color: var(--bg-color);
             color: var(--text-color);
-            /* 폰트 적용 순서: 영문(Press Start) -> 한글(NeoDunggeunmo) */
             font-family: 'Press Start 2P', 'NeoDunggeunmo', cursive;
             min-height: 100vh;
             display: flex;
@@ -78,14 +78,13 @@
             display: flex;
         }
 
-        /* 공통 픽셀 버튼 스타일 */
         .pixel-btn {
             background-color: var(--main-color);
             color: white;
             border: none;
             padding: 15px 30px;
             font-size: 1rem;
-            font-family: inherit; /* 상속받은 폰트 사용 */
+            font-family: inherit;
             cursor: pointer;
             margin: 10px;
             box-shadow: -4px 0 0 0 black, 4px 0 0 0 black, 0 -4px 0 0 black, 0 4px 0 0 black, 6px 6px 0 0 rgba(0,0,0,0.5);
@@ -112,6 +111,13 @@
             box-shadow: none;
         }
 
+        .undo-btn {
+            background-color: var(--undo-color) !important;
+        }
+        .undo-btn:hover {
+            background-color: #f1c40f !important;
+        }
+
         .rule-btn {
             width: 250px;
             font-size: 0.8rem;
@@ -119,7 +125,6 @@
             display: block;
         }
 
-        /* 보스 버튼 스타일 (검정/빨강) */
         .boss-btn {
             background-color: #000 !important;
             color: #ff0000 !important;
@@ -141,7 +146,6 @@
             100% { box-shadow: 0 0 0 0 rgba(255, 0, 0, 0); }
         }
 
-        /* 음소거 버튼 스타일 */
         .pixel-mute-btn {
             position: fixed;
             bottom: 30px;
@@ -181,7 +185,6 @@
             text-shadow: 2px 2px 0 #000;
         }
 
-        /* 팀 설정 UI */
         .team-counter {
             display: flex;
             align-items: center;
@@ -197,7 +200,6 @@
             color: #ffd700;
         }
 
-        /* 스코어보드 */
         .scoreboard {
             display: flex;
             flex-wrap: wrap;
@@ -241,7 +243,6 @@
             color: #fff;
         }
 
-        /* 승리 팝업 */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -282,7 +283,6 @@
             100% { transform: scale(1); opacity: 1; }
         }
 
-        /* 화면 및 보드 스타일 */
         .game-title {
             font-size: 3rem;
             color: var(--main-color);
@@ -326,18 +326,8 @@
         .game-board[data-stage="1"] { grid-template-columns: repeat(5, 1fr); max-width: 600px; }
         .game-board[data-stage="2"] { grid-template-columns: repeat(5, 1fr); max-width: 700px; }
         .game-board[data-stage="3"] { grid-template-columns: repeat(8, 1fr); max-width: 900px; }
-        
-        /* LV.4 (60장): 12열 */
-        .game-board[data-stage="4"] { 
-            grid-template-columns: repeat(12, 1fr); 
-            max-width: 1300px; 
-        }
-        
-        /* BOSS (80장) -> 16열 */
-        .game-board[data-stage="5"] { 
-            grid-template-columns: repeat(16, 1fr); 
-            max-width: 1600px; 
-        }
+        .game-board[data-stage="4"] { grid-template-columns: repeat(12, 1fr); max-width: 1300px; }
+        .game-board[data-stage="5"] { grid-template-columns: repeat(16, 1fr); max-width: 1600px; }
 
         .card {
             background-color: transparent;
@@ -358,6 +348,8 @@
             backface-visibility: hidden;
             border: 2px solid #fff;
             box-shadow: 4px 4px 0 rgba(0,0,0,0.5);
+            /* 부드러운 전환 효과 */
+            transition: all 0.2s;
         }
 
         .card-front {
@@ -366,6 +358,79 @@
             font-size: 1.2rem;
             font-weight: bold;
             text-shadow: 2px 2px 0 #000;
+            overflow: hidden; /* 빛반사 효과가 카드 밖으로 나가지 않게 */
+        }
+        
+        /* 1. 무지개 홀로그램 이펙트 (Rainbow Holo) */
+        .card-front::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -150%;
+            width: 100%;
+            height: 100%;
+            /* 무지개 그라데이션 */
+            background: linear-gradient(
+                120deg,
+                transparent 0%,
+                transparent 30%,
+                rgba(255, 0, 0, 0.5) 40%,
+                rgba(255, 255, 0, 0.5) 45%,
+                rgba(0, 255, 0, 0.5) 50%,
+                rgba(0, 0, 255, 0.5) 55%,
+                rgba(255, 0, 255, 0.5) 60%,
+                transparent 70%,
+                transparent 100%
+            );
+            transform: skewX(-20deg);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        /* 2. 픽셀 별 반짝임 (Pixel Stars) */
+        .card-front::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            /* 4개의 픽셀 별을 background-image로 생성 */
+            background-image: 
+                radial-gradient(2px 2px at 20% 20%, #fff, transparent),
+                radial-gradient(2px 2px at 80% 30%, #fff, transparent),
+                radial-gradient(2px 2px at 30% 80%, #fff, transparent),
+                radial-gradient(2px 2px at 70% 70%, #fff, transparent);
+            background-size: 100% 100%;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* 호버 시 효과 적용 (뒤집히지 않은 카드만) */
+        .card:not(.flipped):not(.matched):hover .card-front {
+            border-color: var(--hover-glow); /* 골드 테두리 */
+            box-shadow: 0 0 10px var(--hover-glow); /* 골드 글로우 */
+            transform: scale(1.05); /* 살짝 커짐 */
+        }
+
+        .card:not(.flipped):not(.matched):hover .card-front::before {
+            opacity: 1;
+            /* 홀로그램 이동 애니메이션 (steps 대신 linear로 부드럽지만 빠르게) */
+            animation: holo-swipe 0.8s linear infinite;
+        }
+
+        .card:not(.flipped):not(.matched):hover .card-front::after {
+            opacity: 1;
+            /* 별 반짝임 애니메이션 */
+            animation: twinkle 0.5s infinite alternate steps(2);
+        }
+
+        @keyframes holo-swipe {
+            0% { left: -150%; }
+            100% { left: 150%; }
+        }
+
+        @keyframes twinkle {
+            0% { transform: scale(0.8); opacity: 0.5; }
+            100% { transform: scale(1.2); opacity: 1; }
         }
         
         .card-back {
@@ -422,7 +487,6 @@
             .game-board[data-stage="2"] { grid-template-columns: repeat(4, 1fr); }
             .game-board[data-stage="3"] { grid-template-columns: repeat(5, 1fr); }
             .game-board[data-stage="4"] { grid-template-columns: repeat(6, 1fr); }
-            /* 모바일 보스 스테이지: 5열 (5x16) */
             .game-board[data-stage="5"] { grid-template-columns: repeat(5, 1fr); }
             
             .level-grid { grid-template-columns: 1fr; }
@@ -531,6 +595,7 @@
             <button class="pixel-btn" style="background-color: #555;" onclick="goBackFromLevel()">🔙 BACK</button>
             <button class="pixel-btn" id="shuffleBtn" onclick="shuffleBoard()">🔀 MIX</button>
             <button class="pixel-btn" id="hintBtn" onclick="toggleHint()">👁️ HINT</button>
+            <button class="pixel-btn undo-btn" id="undoBtn" onclick="undoLastAction()">↩️ UNDO</button>
         </div>
 
         <div class="game-board" id="gameBoard" data-stage="1"></div>
@@ -674,28 +739,17 @@
             "https://i.ibb.co/9xSN0px/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
             "https://i.ibb.co/5xFbpsvx/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
             "https://i.ibb.co/3yNn17tS/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
-            "https://i.ibb.co/rG0NJTSJ/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
-            "https://i.ibb.co/d40RBjKD/image.png",
-            "https://i.ibb.co/r27B9XTT/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
-            "https://i.ibb.co/1G0Hkrbk/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
-            "https://i.ibb.co/J9zw35M/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
-            "https://i.ibb.co/N611rsfN/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
-            "https://i.ibb.co/whFt1wfY/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
-            "https://i.ibb.co/VcjFKWbm/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
-            "https://i.ibb.co/mVmcj6Vs/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
-            "https://i.ibb.co/CsngyFQy/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
-            "https://i.ibb.co/s9D3Ff6t/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
-            "https://i.ibb.co/TMtD8xzP/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png"
-            
+            "https://i.ibb.co/rG0NJTSJ/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png"
         ];
 
-        // 보스 스테이지
         const stageConfig = { 1: 10, 2: 20, 3: 40, 4: 60, 5: 80 };
         let currentStage = 1;
         let flippedCards = [];
         let matchedCount = 0;
         let isProcessing = false;
         let isHintActive = false; 
+        
+        let undoStack = [];
 
         function startGame(stage) {
             switchScreen('game-screen');
@@ -714,11 +768,12 @@
             matchedCount = 0;
             isHintActive = false;
             isProcessing = true;
+            undoStack = [];
             document.getElementById('hintBtn').textContent = '👁️ HINT';
             document.getElementById('shuffleBtn').disabled = true;
             document.getElementById('hintBtn').disabled = true;
+            document.getElementById('undoBtn').disabled = false;
 
-            // 팀 초기화
             teams = [];
             for (let i = 0; i < totalTeams; i++) {
                 teams.push({
@@ -814,12 +869,21 @@
         function checkForMatch() {
             isProcessing = true;
             const [first, second] = flippedCards;
+            
+            const currentTurnInfo = {
+                teamIndex: currentTeamIndex,
+                cards: [first.card, second.card]
+            };
 
             if (first.imgUrl === second.imgUrl) {
-                // 매칭 성공
                 playMatchSound();
                 teams[currentTeamIndex].score++;
                 renderScoreboard();
+                
+                undoStack.push({
+                    type: 'match',
+                    ...currentTurnInfo
+                });
 
                 setTimeout(() => {
                     const currentColor = teams[currentTeamIndex].color;
@@ -839,14 +903,17 @@
                         playWinSound();
                         showVictoryResult();
                     } else {
-                        // 룰에 따라 턴 처리
                         if (gameMode === 'multi' && gameRule === 'pass') {
                             switchTurn();
                         }
                     }
                 }, 200);
             } else {
-                // 매칭 실패
+                undoStack.push({
+                    type: 'fail',
+                    ...currentTurnInfo
+                });
+
                 setTimeout(() => { playFailSound(); }, 400);
                 setTimeout(() => {
                     first.card.classList.remove('flipped');
@@ -858,6 +925,37 @@
                         switchTurn();
                     }
                 }, 800);
+            }
+        }
+
+        function undoLastAction() {
+            if (isProcessing) return;
+
+            if (flippedCards.length === 1) {
+                const item = flippedCards.pop();
+                item.card.classList.remove('flipped');
+                return;
+            }
+
+            if (undoStack.length === 0) return;
+
+            const lastAction = undoStack.pop();
+
+            currentTeamIndex = lastAction.teamIndex;
+            renderScoreboard();
+
+            if (lastAction.type === 'match') {
+                teams[lastAction.teamIndex].score--;
+                matchedCount--;
+                
+                lastAction.cards.forEach(card => {
+                    card.classList.remove('matched');
+                    card.classList.remove('flipped');
+                    card.style.borderColor = '#fff';
+                    card.style.boxShadow = '4px 4px 0 rgba(0,0,0,0.5)';
+                    setTimeout(() => card.style.transform = '', 0); 
+                });
+                renderScoreboard();
             }
         }
 
