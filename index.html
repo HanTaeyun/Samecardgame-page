@@ -221,6 +221,15 @@
             transition: all 0.3s;
         }
 
+        /* 멀티플레이 시 클릭 가능함을 표시 */
+        .team-score.clickable {
+            cursor: pointer;
+        }
+        .team-score.clickable:hover {
+            background-color: #333;
+            transform: translateY(-2px);
+        }
+
         .team-score.active {
             border-color: #fff;
             transform: scale(1.1);
@@ -348,7 +357,6 @@
             backface-visibility: hidden;
             border: 2px solid #fff;
             box-shadow: 4px 4px 0 rgba(0,0,0,0.5);
-            /* 부드러운 전환 효과 */
             transition: all 0.2s;
         }
 
@@ -358,10 +366,9 @@
             font-size: 1.2rem;
             font-weight: bold;
             text-shadow: 2px 2px 0 #000;
-            overflow: hidden; /* 빛반사 효과가 카드 밖으로 나가지 않게 */
+            overflow: hidden; 
         }
         
-        /* 1. 무지개 홀로그램 이펙트 (Rainbow Holo) */
         .card-front::before {
             content: '';
             position: absolute;
@@ -369,7 +376,6 @@
             left: -150%;
             width: 100%;
             height: 100%;
-            /* 무지개 그라데이션 */
             background: linear-gradient(
                 120deg,
                 transparent 0%,
@@ -388,12 +394,10 @@
             transition: opacity 0.2s;
         }
 
-        /* 2. 픽셀 별 반짝임 (Pixel Stars) */
         .card-front::after {
             content: '';
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            /* 4개의 픽셀 별을 background-image로 생성 */
             background-image: 
                 radial-gradient(2px 2px at 20% 20%, #fff, transparent),
                 radial-gradient(2px 2px at 80% 30%, #fff, transparent),
@@ -404,22 +408,19 @@
             pointer-events: none;
         }
 
-        /* 호버 시 효과 적용 (뒤집히지 않은 카드만) */
         .card:not(.flipped):not(.matched):hover .card-front {
-            border-color: var(--hover-glow); /* 골드 테두리 */
-            box-shadow: 0 0 10px var(--hover-glow); /* 골드 글로우 */
-            transform: scale(1.05); /* 살짝 커짐 */
+            border-color: var(--hover-glow); 
+            box-shadow: 0 0 10px var(--hover-glow); 
+            transform: scale(1.05); 
         }
 
         .card:not(.flipped):not(.matched):hover .card-front::before {
             opacity: 1;
-            /* 홀로그램 이동 애니메이션 (steps 대신 linear로 부드럽지만 빠르게) */
             animation: holo-swipe 0.8s linear infinite;
         }
 
         .card:not(.flipped):not(.matched):hover .card-front::after {
             opacity: 1;
-            /* 별 반짝임 애니메이션 */
             animation: twinkle 0.5s infinite alternate steps(2);
         }
 
@@ -835,6 +836,18 @@
                 scoreBox.className = 'team-score';
                 scoreBox.style.setProperty('--team-color', team.color); 
                 
+                // 멀티플레이 모드일 때 클릭 이벤트 추가
+                if (gameMode === 'multi') {
+                    scoreBox.classList.add('clickable');
+                    scoreBox.onclick = () => {
+                        if (!isProcessing && currentTeamIndex !== index) {
+                            currentTeamIndex = index;
+                            playClickSound();
+                            renderScoreboard();
+                        }
+                    };
+                }
+
                 if (index === currentTeamIndex) {
                     scoreBox.classList.add('active');
                     scoreBox.style.borderColor = team.color;
