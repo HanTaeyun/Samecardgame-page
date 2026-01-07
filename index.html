@@ -34,7 +34,6 @@
             padding: 20px;
             background-color: var(--bg-color);
             color: var(--text-color);
-            /* 전체 기본 폰트: 영문 우선, 한글 차선 */
             font-family: 'Press Start 2P', 'NeoDunggeunmo', cursive;
             min-height: 100vh;
             display: flex;
@@ -80,7 +79,7 @@
             display: flex;
         }
 
-        /* 저작권 문구 스타일 */
+        /* 저작권 문구 */
         .copyright {
             position: fixed;
             bottom: 20px;
@@ -92,16 +91,12 @@
             text-shadow: 1px 1px 0 #000;
             z-index: 1000;
             pointer-events: none;
-            
-            /* 이질감 및 높이 문제 해결 */
-            /* 한글/영문을 모두 포함하는 'NeoDunggeunmo' 단일 폰트로 통일 */
             font-family: 'NeoDunggeunmo', cursive;
             letter-spacing: 1px;
-            
             transition: opacity 0.3s;
         }
 
-        /* 버튼 스타일 */
+        /* 버튼 스타일 (공통) */
         .pixel-btn {
             background-color: var(--main-color);
             color: white;
@@ -169,37 +164,154 @@
             100% { box-shadow: 0 0 0 0 rgba(255, 0, 0, 0); }
         }
 
-        /* Mute Button */
-        .pixel-mute-btn {
+        /* === [Sound Controls Fixed] === */
+        
+        .sound-controls-container {
             position: fixed;
             bottom: 30px;
             right: 30px;
-            width: 80px;
-            height: 50px;
-            z-index: 1000;
-            font-family: inherit;
-            font-size: 1rem;
-            color: white;
+            z-index: 1500;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 220px; 
+            justify-content: flex-end; 
+            pointer-events: none; 
+        }
+
+        /* 2. Main Button */
+        .bgm-btn {
+            width: 60px;
+            height: 60px;
+            background-color: #27ae60;
             border: none;
+            border-radius: 0;
             cursor: pointer;
-            background-color: #27ae60; 
             box-shadow: -4px 0 0 0 black, 4px 0 0 0 black, 0 -4px 0 0 black, 0 4px 0 0 black, 6px 6px 0 0 rgba(0,0,0,0.5);
-            transition: transform 0.1s, background-color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            transition: all 0.1s;
+            position: relative;
+            z-index: 2;
+            pointer-events: auto; 
+        }
+
+        .bgm-btn:hover { 
+            transform: translate(2px, 2px); 
+            box-shadow: -4px 0 0 0 black, 4px 0 0 0 black, 0 -4px 0 0 black, 0 4px 0 0 black, 4px 4px 0 0 rgba(0,0,0,0.5);
+        }
+        
+        .bgm-btn:active { 
+            transform: translate(6px, 6px);
+            box-shadow: none; 
+        }
+
+        .bgm-btn.muted { background-color: #c0392b; }
+
+        .bgm-btn::after {
+            content: "BGM";
+            position: absolute;
+            bottom: -25px;
+            font-size: 0.6rem;
+            color: #fff;
+            text-shadow: 1px 1px 0 #000;
+            font-family: 'Press Start 2P', cursive;
+            white-space: nowrap;
+        }
+
+        /* 픽셀 아이콘 */
+        .pixel-icon {
+            width: 40px; /* 24px/32px -> 40px */
+            height: 40px;
+            fill: #fff;
+            /* 도트가 흐려지지 않고 각지게 렌더링되도록 강제 */
+            shape-rendering: crispEdges; 
+        }
+
+        /* 3. Slider Popup */
+        .volume-popup {
+            position: relative;
+            margin-bottom: 15px; 
+            width: 50px;
+            height: 140px;
+            background-color: var(--accent-color);
+            border: 4px solid #fff;
+            box-shadow: 6px 6px 0 0 black;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between; 
+            padding: 15px 0;
+            
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(10px);
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: auto; 
+        }
+
+        .volume-popup::after {
+            content: '';
+            position: absolute;
+            bottom: -20px; 
+            left: 0;
+            width: 100%;
+            height: 20px; 
+            background: transparent;
+        }
+
+        .sound-controls-container:hover .volume-popup {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .vol-label {
+            font-size: 0.6rem;
+            color: #ffd700;
+            text-shadow: 1px 1px 0 #000;
+            margin-bottom: 10px; 
+            z-index: 5;
+        }
+
+        .slider-wrapper {
+            width: 30px;
+            height: 100px;
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
-        .pixel-mute-btn:active { transform: translate(6px, 6px); box-shadow: none; }
-        .pixel-mute-btn.muted { background-color: #c0392b; }
-        .pixel-mute-btn::before {
-            content: "BGM";
-            position: absolute;
-            top: -20px;
-            font-size: 0.6rem;
-            color: #fff;
-            opacity: 0.8;
-            text-shadow: 2px 2px 0 #000;
+        input[type=range].vertical-slider {
+            -webkit-appearance: none;
+            width: 80px; 
+            height: 8px; 
+            background: transparent;
+            transform: rotate(-90deg);
+            cursor: pointer;
+        }
+
+        input[type=range].vertical-slider:focus { outline: none; }
+
+        input[type=range].vertical-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 16px;
+            width: 16px;
+            background: var(--undo-color);
+            border: 2px solid #000;
+            cursor: pointer;
+            margin-top: -6px; 
+            box-shadow: 1px 1px 0 #fff inset;
+        }
+
+        input[type=range].vertical-slider::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: #fff;
+            border: 1px solid #000;
         }
 
         /* UI Elements */
@@ -505,7 +617,12 @@
             
             .level-grid { grid-template-columns: 1fr; }
             .card-front { font-size: 1rem; }
-            .pixel-mute-btn { width: 70px; height: 45px; bottom: 20px; right: 20px; font-size: 0.8rem; }
+            
+            .sound-controls-container { right: 20px; bottom: 20px; }
+            .bgm-btn { width: 50px; height: 50px; font-size: 1.2rem; }
+            /* 모바일에서 아이콘 크기 조정 */
+            .pixel-icon { width: 30px; height: 30px; }
+            
             .modal-title { font-size: 1.5rem; }
             .team-score { min-width: 60px; padding: 5px; }
             .team-point { font-size: 1rem; }
@@ -517,7 +634,25 @@
 
     <div class="scanlines"></div>
 
-    <button id="bgmMuteBtn" class="pixel-mute-btn" onclick="toggleMute()">ON</button>
+    <div class="sound-controls-container">
+        
+        <div class="volume-popup">
+            <span class="vol-label">VOL</span>
+            <div class="slider-wrapper">
+                <input type="range" class="vertical-slider" min="0" max="1" step="0.1" value="1.0" oninput="updateVolume(this.value)">
+            </div>
+        </div>
+
+        <button id="bgmBtn" class="bgm-btn" onclick="toggleMute()">
+            <svg id="icon-note" class="pixel-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <rect x="7" y="13" width="6" height="4"/>
+                <rect x="11" y="4" width="2" height="12"/>
+                <rect x="13" y="4" width="2" height="2"/>
+                <rect x="15" y="5" width="2" height="2"/>
+                <rect x="17" y="6" width="2" height="2"/>
+            </svg>
+        </button>
+    </div>
 
     <div id="victory-modal" class="modal-overlay hidden">
         <div class="modal-box">
@@ -639,10 +774,38 @@
         // === 사운드 시스템 ===
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         let isMuted = false;
+        let masterVolume = 1.0; 
         let bgmInterval = null;
         let bgmNoteIndex = 0;
 
+        // [ICONS] SVG Strings for switching (Corrected Rects)
+        const iconNote = `
+            <svg class="pixel-icon" viewBox="0 0 24 24">
+                <rect x="7" y="13" width="6" height="4"/>
+                <rect x="11" y="4" width="2" height="12"/>
+                <rect x="13" y="4" width="2" height="2"/>
+                <rect x="15" y="5" width="2" height="2"/>
+                <rect x="17" y="6" width="2" height="2"/>
+            </svg>
+        `;
+        
+        const iconMute = `
+            <svg class="pixel-icon" viewBox="0 0 24 24">
+                <rect x="6" y="6" width="2" height="2"/>
+                <rect x="8" y="8" width="2" height="2"/>
+                <rect x="10" y="10" width="4" height="4"/>
+                <rect x="14" y="14" width="2" height="2"/>
+                <rect x="16" y="16" width="2" height="2"/>
+                <rect x="6" y="16" width="2" height="2"/>
+                <rect x="8" y="14" width="2" height="2"/>
+                <rect x="14" y="8" width="2" height="2"/>
+                <rect x="16" y="6" width="2" height="2"/>
+            </svg>
+        `;
+
         window.addEventListener('load', () => {
+            document.getElementById('bgmBtn').innerHTML = iconNote;
+
             document.body.addEventListener('click', () => {
                 if (audioCtx.state === 'suspended') {
                     audioCtx.resume();
@@ -650,6 +813,14 @@
                 startBGM();
             }, { once: true });
         });
+
+        // 슬라이더 조절
+        function updateVolume(val) {
+            masterVolume = parseFloat(val);
+            if (masterVolume > 0 && isMuted) {
+                toggleMute();
+            }
+        }
 
         function playTone(freq, type, duration, vol = 0.1) {
             if (isMuted) return; 
@@ -661,7 +832,11 @@
 
             osc.type = type; 
             osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-            gainNode.gain.setValueAtTime(vol, audioCtx.currentTime);
+            
+            const boost = 3.0; 
+            const effectiveVol = Math.min(vol * boost * masterVolume, 1.5); 
+
+            gainNode.gain.setValueAtTime(effectiveVol, audioCtx.currentTime);
             gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
 
             osc.connect(gainNode);
@@ -692,16 +867,18 @@
             }
         }
 
+        // 클릭 시 Mute 토글
         function toggleMute() {
             isMuted = !isMuted;
-            const btn = document.getElementById('bgmMuteBtn');
+            const btn = document.getElementById('bgmBtn');
+            
             if (isMuted) {
-                btn.textContent = 'OFF';
                 btn.classList.add('muted');
+                btn.innerHTML = iconMute; 
                 stopBGM(); 
             } else {
-                btn.textContent = 'ON';
                 btn.classList.remove('muted');
+                btn.innerHTML = iconNote; 
                 if (audioCtx.state === 'suspended') audioCtx.resume();
                 startBGM(); 
             }
