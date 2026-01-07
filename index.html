@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>같은 카드를 찾아라!</title>
+    <title>같은 카드를 찾아라! (Retro Font)</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/neodgm/neodgm-webfont@latest/neodgm/style.css">
@@ -25,7 +25,7 @@
             --card-back: #16213e;
             --card-front: #e94560;
             --undo-color: #f39c12;
-            --roulette-color: #9b59b6; /* 돌림판 버튼 색상 (보라) */
+            --roulette-color: #9b59b6; 
             --hover-glow: #ffd700;
         }
 
@@ -34,6 +34,7 @@
             padding: 20px;
             background-color: var(--bg-color);
             color: var(--text-color);
+            /* 전체 기본 폰트: 영문 우선, 한글 차선 */
             font-family: 'Press Start 2P', 'NeoDunggeunmo', cursive;
             min-height: 100vh;
             display: flex;
@@ -77,6 +78,27 @@
         }
         .screen.active {
             display: flex;
+        }
+
+        /* 저작권 문구 스타일 */
+        .copyright {
+            position: fixed;
+            bottom: 20px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            font-size: 0.7rem;
+            color: #666;
+            text-shadow: 1px 1px 0 #000;
+            z-index: 1000;
+            pointer-events: none;
+            
+            /* 이질감 및 높이 문제 해결 */
+            /* 한글/영문을 모두 포함하는 'NeoDunggeunmo' 단일 폰트로 통일 */
+            font-family: 'NeoDunggeunmo', cursive;
+            letter-spacing: 1px;
+            
+            transition: opacity 0.3s;
         }
 
         /* 버튼 스타일 */
@@ -284,7 +306,6 @@
             border-radius: 50%;
             border: 5px solid #fff;
             box-shadow: 0 0 0 5px #000, 0 0 15px rgba(0,0,0,0.5);
-            /* Conic gradient will be injected by JS */
             transition: transform 4s cubic-bezier(0.1, 0.7, 0.1, 1);
         }
 
@@ -418,10 +439,15 @@
             pointer-events: none;
         }
 
+        .card:not(.flipped):not(.matched):hover {
+            transform: scale(1.15); /* 1.15배 확대 */
+            z-index: 20; /* 다른 카드 위로 */
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+        }
+
         .card:not(.flipped):not(.matched):hover .card-front {
             border-color: var(--hover-glow); 
-            box-shadow: 0 0 10px var(--hover-glow); 
-            transform: scale(1.05); 
+            box-shadow: 0 0 15px var(--hover-glow); 
         }
 
         .card:not(.flipped):not(.matched):hover .card-front::before {
@@ -516,6 +542,10 @@
                 <button class="pixel-btn" style="background-color: #555;" onclick="closeRoulette()">CLOSE</button>
             </div>
         </div>
+    </div>
+
+    <div id="main-copyright" class="copyright">
+        © 2026 모두의 MC. All rights reserved.
     </div>
 
     <div id="intro-screen" class="screen active container">
@@ -685,6 +715,11 @@
         function switchScreen(screenId) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(screenId).classList.add('active');
+            
+            const copyright = document.getElementById('main-copyright');
+            if (copyright) {
+                copyright.style.opacity = (screenId === 'intro-screen') ? '1' : '0';
+            }
         }
         function goHome() {
             document.getElementById('victory-modal').classList.add('hidden');
@@ -743,7 +778,18 @@
             "https://i.ibb.co/9xSN0px/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
             "https://i.ibb.co/5xFbpsvx/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
             "https://i.ibb.co/3yNn17tS/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
-            "https://i.ibb.co/rG0NJTSJ/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png"
+            "https://i.ibb.co/rG0NJTSJ/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+            "https://i.ibb.co/TMtD8xzP/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+            "https://i.ibb.co/s9D3Ff6t/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+            "https://i.ibb.co/CsngyFQy/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+            "https://i.ibb.co/mVmcj6Vs/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+            "https://i.ibb.co/VcjFKWbm/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+            "https://i.ibb.co/whFt1wfY/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+            "https://i.ibb.co/N611rsfN/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+            "https://i.ibb.co/J9zw35M/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+            "https://i.ibb.co/1G0Hkrbk/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+            "https://i.ibb.co/r27B9XTT/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+            "https://i.ibb.co/d40RBjKD/image.png"
         ];
 
         const stageConfig = { 1: 10, 2: 20, 3: 40, 4: 60, 5: 80 };
@@ -1040,7 +1086,6 @@
                 currentTeamIndex = winningTeamIndex;
                 renderScoreboard();
                 
-                // 자동으로 닫히지 않음 (CLOSE 버튼은 유지)
                 // 버튼 다시 활성화 (다시 돌리기 가능)
                 spinBtn.disabled = false;
 
