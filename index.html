@@ -605,6 +605,20 @@
         .card.shuffling { animation: shuffleMix 0.6s ease-in-out; pointer-events: none; }
         @keyframes shuffleMix { 0% { transform: scale(1); } 50% { transform: scale(0.5) translateY(-30px); z-index: 100; } 100% { transform: scale(1); } }
 
+        /* 로딩 텍스트 차오르는 효과 클래스 (왼쪽에서 오른쪽) */
+        .fill-text {
+            font-size: 5rem;
+            font-weight: 900;
+            font-family: 'Pretendard', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+            margin-bottom: 30px;
+            letter-spacing: -3px;
+            background-image: linear-gradient(to right, #ffd700 0%, #ffd700 0%, #ffffff 0%, #ffffff 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            -webkit-text-fill-color: transparent;
+        }
+
         @media (max-width: 768px) {
             .game-title { font-size: 2rem; }
             .game-board { gap: 5px; padding: 0 5px; }
@@ -625,6 +639,8 @@
             .team-score { min-width: 60px; padding: 5px; }
             .team-point { font-size: 1rem; }
             .roulette-container { width: 250px; height: 250px; }
+
+            .fill-text { font-size: 3.5rem; } 
         }
     </style>
 </head>
@@ -633,14 +649,12 @@
     <div class="scanlines"></div>
 
     <div class="sound-controls-container">
-        
         <div class="volume-popup">
             <span class="vol-label">VOL</span>
             <div class="slider-wrapper">
                 <input type="range" class="vertical-slider" min="0" max="1" step="0.1" value="1.0" oninput="updateVolume(this.value)">
             </div>
         </div>
-
         <button id="bgmBtn" class="bgm-btn" onclick="toggleMute()">
             <svg id="icon-note" class="pixel-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <rect x="7" y="13" width="6" height="4"/>
@@ -681,7 +695,7 @@
         © 2026 모두의 MC. All rights reserved.
     </div>
 
-    <div id="intro-screen" class="screen active container">
+    <div id="intro-screen" class="screen container">
         <h1 class="game-title">같은 카드를<br>찾아라!</h1>
         <p style="font-size: 0.8rem; opacity: 0.7; margin-bottom: 30px; line-height: 1.6;">
             CLICK ANYWHERE TO START MUSIC<br><br>
@@ -754,6 +768,22 @@
         </div>
     </div>
 
+    <div id="loading-screen" class="screen active container">
+        <div class="level-box" style="width: 100%; max-width: 600px; padding: 60px 20px; border: none; background: transparent; box-shadow: none;">
+            
+            <div style="font-size: 1rem; color: #ccc; font-family: 'Pretendard', 'Noto Sans KR', 'Malgun Gothic', sans-serif; margin-bottom: 10px; letter-spacing: 1px;">
+                남녀노소 모두가 좋아하는 모두의 MC
+            </div>
+            
+            <div id="fill-text" class="fill-text">모두의 MC</div>
+
+            <div style="font-size: 1.5rem; color: #fff; font-family: 'Pretendard', 'Noto Sans KR', sans-serif; font-weight: bold;">
+                <span id="loading-percent">0</span>%
+            </div>
+            
+        </div>
+    </div>
+
     <div id="game-screen" class="screen container">
         <div id="scoreboard" class="scoreboard"></div>
 
@@ -769,14 +799,12 @@
     </div>
 
     <script>
-        // === 사운드 시스템 ===
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         let isMuted = false;
         let masterVolume = 1.0; 
         let bgmInterval = null;
         let bgmNoteIndex = 0;
 
-        // [ICONS] SVG Strings for switching (Corrected Rects)
         const iconNote = `
             <svg class="pixel-icon" viewBox="0 0 24 24">
                 <rect x="7" y="13" width="6" height="4"/>
@@ -801,6 +829,50 @@
             </svg>
         `;
 
+        const imgUrls = [
+            "https://i.ibb.co/nHssMmS/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+            "https://i.ibb.co/YFRpkN29/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+            "https://i.ibb.co/YBBh5BQb/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+            "https://i.ibb.co/WN0YSjpQ/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+            "https://i.ibb.co/VWK2r0ns/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+            "https://i.ibb.co/NgSqKjcV/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+            "https://i.ibb.co/nNR8G4wN/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+            "https://i.ibb.co/C3Xwnw7B/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+            "https://i.ibb.co/dwgYRL3w/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+            "https://i.ibb.co/G39JHfYP/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+            "https://i.ibb.co/cX7Ph3P8/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+            "https://i.ibb.co/VcGrZdw8/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+            "https://i.ibb.co/wZsFH5jd/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+            "https://i.ibb.co/hJdcLQt4/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+            "https://i.ibb.co/bjjKpPNt/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+            "https://i.ibb.co/MxnzX2Zb/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+            "https://i.ibb.co/Fq5Q1Z4x/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+            "https://i.ibb.co/hJYKqKfq/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+            "https://i.ibb.co/sdWrMVWj/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+            "https://i.ibb.co/s9L3QWrK/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+            "https://i.ibb.co/qFXhMsJB/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+            "https://i.ibb.co/gZSnVKGY/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+            "https://i.ibb.co/G4Sw4FXR/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+            "https://i.ibb.co/bj1ZgXDb/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+            "https://i.ibb.co/5x9jRYcL/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+            "https://i.ibb.co/MkxkNMT1/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+            "https://i.ibb.co/9xSN0px/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+            "https://i.ibb.co/5xFbpsvx/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+            "https://i.ibb.co/3yNn17tS/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+            "https://i.ibb.co/rG0NJTSJ/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+            "https://i.ibb.co/TMtD8xzP/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+            "https://i.ibb.co/s9D3Ff6t/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+            "https://i.ibb.co/CsngyFQy/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+            "https://i.ibb.co/mVmcj6Vs/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+            "https://i.ibb.co/VcjFKWbm/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+            "https://i.ibb.co/whFt1wfY/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+            "https://i.ibb.co/N611rsfN/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+            "https://i.ibb.co/J9zw35M/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+            "https://i.ibb.co/1G0Hkrbk/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+            "https://i.ibb.co/r27B9XTT/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
+            "https://i.ibb.co/d40RBjKD/image.png"
+        ];
+
         window.addEventListener('load', () => {
             document.getElementById('bgmBtn').innerHTML = iconNote;
 
@@ -810,9 +882,72 @@
                 }
                 startBGM();
             }, { once: true });
+
+            document.querySelectorAll('.pixel-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    if (audioCtx.state === 'suspended') audioCtx.resume();
+                    playUIButtonSound();
+                });
+            });
+
+            // 페이지 로드 시 초기 이미지 프리로드 실행
+            preloadImages();
         });
 
-        // 슬라이더 조절
+        // 실제 이미지 로딩 상태 추적 함수 (1부터 100까지 자연스럽게 숫자가 차오름)
+        function preloadImages() {
+            const uniqueUrls = [...new Set(imgUrls)];
+            const total = uniqueUrls.length;
+            let loaded = 0;
+
+            // targetPercent는 실제 로딩률, currentDisplayPercent는 화면에 보여지는 숫자
+            let targetPercent = 0;
+            let currentDisplayPercent = 0;
+
+            const percentText = document.getElementById('loading-percent');
+            const fillText = document.getElementById('fill-text');
+
+            percentText.innerText = '0';
+            fillText.style.backgroundImage = `linear-gradient(to right, #ffd700 0%, #ffd700 0%, #ffffff 0%, #ffffff 100%)`;
+
+            if (total === 0) {
+                targetPercent = 100;
+            } else {
+                uniqueUrls.forEach(url => {
+                    const img = new Image();
+                    img.onload = () => handleLoad();
+                    img.onerror = () => handleLoad(); 
+                    img.src = url;
+                });
+            }
+
+            function handleLoad() {
+                loaded++;
+                targetPercent = Math.floor((loaded / total) * 100);
+            }
+
+            // 시각적으로 1부터 100까지 부드럽게 올라가도록 간격 설정 (약 15ms 마다 업데이트)
+            const smoothInterval = setInterval(() => {
+                // 보여지는 퍼센트가 실제 목표 퍼센트보다 낮으면 1씩 부드럽게 증가시킴
+                if (currentDisplayPercent < targetPercent) {
+                    currentDisplayPercent++;
+                    percentText.innerText = currentDisplayPercent;
+                    fillText.style.backgroundImage = `linear-gradient(to right, #ffd700 0%, #ffd700 ${currentDisplayPercent}%, #ffffff ${currentDisplayPercent}%, #ffffff 100%)`;
+                }
+
+                // 100% 에 도달하면 로딩 종료
+                if (currentDisplayPercent >= 100) {
+                    clearInterval(smoothInterval);
+                    setTimeout(finishPreload, 400); // 100% 도달 후 사용자가 잠시 인식할 수 있도록 대기
+                }
+            }, 15); 
+        }
+
+        // 프리로드가 완료되면 게임 초기 화면으로 전환
+        function finishPreload() {
+            switchScreen('intro-screen');
+        }
+
         function updateVolume(val) {
             masterVolume = parseFloat(val);
             if (masterVolume > 0 && isMuted) {
@@ -865,7 +1000,6 @@
             }
         }
 
-        // 클릭 시 Mute 토글
         function toggleMute() {
             isMuted = !isMuted;
             const btn = document.getElementById('bgmBtn');
@@ -882,7 +1016,8 @@
             }
         }
 
-        function playClickSound() { playTone(600, 'square', 0.05, 0.1); }
+        function playClickSound() { playTone(600, 'square', 0.05, 0.1); } 
+        function playUIButtonSound() { playTone(1200, 'sine', 0.05, 0.1); } 
         function playMatchSound() { playTone(880, 'square', 0.1, 0.1); setTimeout(() => playTone(1108, 'square', 0.2, 0.1), 100); }
         function playFailSound() { playTone(150, 'sawtooth', 0.2, 0.1); setTimeout(() => playTone(100, 'sawtooth', 0.3, 0.1), 150); }
         function playWinSound() { playTone(523.25, 'square', 0.1, 0.15); setTimeout(() => playTone(659.25, 'square', 0.1, 0.15), 100); setTimeout(() => playTone(783.99, 'square', 0.1, 0.15), 200); setTimeout(() => playTone(1046.50, 'square', 0.4, 0.15), 300); }
@@ -893,7 +1028,7 @@
             
             const copyright = document.getElementById('main-copyright');
             if (copyright) {
-                copyright.style.opacity = (screenId === 'intro-screen') ? '1' : '0';
+                copyright.style.opacity = (screenId === 'intro-screen' || screenId === 'loading-screen') ? '1' : '0';
             }
         }
         function goHome() {
@@ -923,50 +1058,6 @@
         function selectRule(rule) { gameRule = rule; switchScreen('level-screen'); }
         function goBackFromLevel() { if (gameMode === 'single') showModeSelect(); else showRuleSelect(); }
 
-        const imgUrls = [
-            "https://i.ibb.co/nHssMmS/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
-            "https://i.ibb.co/YFRpkN29/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
-            "https://i.ibb.co/YBBh5BQb/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
-            "https://i.ibb.co/WN0YSjpQ/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
-            "https://i.ibb.co/VWK2r0ns/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
-            "https://i.ibb.co/NgSqKjcV/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
-            "https://i.ibb.co/nNR8G4wN/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
-            "https://i.ibb.co/C3Xwnw7B/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
-            "https://i.ibb.co/dwgYRL3w/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
-            "https://i.ibb.co/G39JHfYP/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
-            "https://i.ibb.co/cX7Ph3P8/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
-            "https://i.ibb.co/VcGrZdw8/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
-            "https://i.ibb.co/wZsFH5jd/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
-            "https://i.ibb.co/hJdcLQt4/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
-            "https://i.ibb.co/bjjKpPNt/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
-            "https://i.ibb.co/MxnzX2Zb/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
-            "https://i.ibb.co/Fq5Q1Z4x/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
-            "https://i.ibb.co/hJYKqKfq/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
-            "https://i.ibb.co/sdWrMVWj/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
-            "https://i.ibb.co/s9L3QWrK/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
-            "https://i.ibb.co/qFXhMsJB/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
-            "https://i.ibb.co/gZSnVKGY/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
-            "https://i.ibb.co/G4Sw4FXR/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
-            "https://i.ibb.co/bj1ZgXDb/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
-            "https://i.ibb.co/5x9jRYcL/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
-            "https://i.ibb.co/MkxkNMT1/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
-            "https://i.ibb.co/9xSN0px/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
-            "https://i.ibb.co/5xFbpsvx/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
-            "https://i.ibb.co/3yNn17tS/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
-            "https://i.ibb.co/rG0NJTSJ/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
-            "https://i.ibb.co/TMtD8xzP/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
-            "https://i.ibb.co/s9D3Ff6t/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
-            "https://i.ibb.co/CsngyFQy/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
-            "https://i.ibb.co/mVmcj6Vs/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
-            "https://i.ibb.co/VcjFKWbm/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
-            "https://i.ibb.co/whFt1wfY/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
-            "https://i.ibb.co/N611rsfN/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
-            "https://i.ibb.co/J9zw35M/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
-            "https://i.ibb.co/1G0Hkrbk/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
-            "https://i.ibb.co/r27B9XTT/0-CGPK4s1-T2-AUebe-IYXx-Dmgv-Z5da-Uj-MAPj-Uwflj-MI3-Ndj-Qzs-Okurt3-K2g-Kci-x-MGYtx-Dnk-S9-K5-Pz-SZUWpnkk-R.png",
-            "https://i.ibb.co/d40RBjKD/image.png"
-        ];
-
         const stageConfig = { 1: 10, 2: 20, 3: 40, 4: 60, 5: 80 };
         let currentStage = 1;
         let flippedCards = [];
@@ -975,12 +1066,38 @@
         let isHintActive = false; 
         
         let undoStack = [];
-        // 룰렛 관련 변수
         let rouletteCurrentRot = 0;
 
+        // 레벨 진입 시 가짜 로딩창 (글자가 왼쪽에서 오른쪽으로 차오름)
         function startGame(stage) {
-            switchScreen('game-screen');
-            setStage(stage);
+            switchScreen('loading-screen');
+            
+            let percent = 0;
+            const percentText = document.getElementById('loading-percent');
+            const fillText = document.getElementById('fill-text');
+            
+            // 초기화
+            percentText.innerText = '0';
+            fillText.style.backgroundImage = `linear-gradient(to right, #ffd700 0%, #ffd700 0%, #ffffff 0%, #ffffff 100%)`;
+
+            const loadingInterval = setInterval(() => {
+                percent++; 
+                
+                if (percent >= 100) {
+                    percent = 100;
+                    percentText.innerText = percent;
+                    fillText.style.backgroundImage = `linear-gradient(to right, #ffd700 0%, #ffd700 100%, #ffffff 100%, #ffffff 100%)`;
+                    clearInterval(loadingInterval);
+                    
+                    setTimeout(() => {
+                        switchScreen('game-screen');
+                        setStage(stage);
+                    }, 500); 
+                } else {
+                    percentText.innerText = percent;
+                    fillText.style.backgroundImage = `linear-gradient(to right, #ffd700 0%, #ffd700 ${percent}%, #ffffff ${percent}%, #ffffff 100%)`;
+                }
+            }, 15); 
         }
 
         function setStage(stage) {
@@ -996,13 +1113,12 @@
             isHintActive = false;
             isProcessing = true;
             undoStack = [];
-            rouletteCurrentRot = 0; // 룰렛 각도 초기화
+            rouletteCurrentRot = 0; 
             document.getElementById('hintBtn').textContent = '👁️ HINT';
             document.getElementById('shuffleBtn').disabled = true;
             document.getElementById('hintBtn').disabled = true;
             document.getElementById('undoBtn').disabled = false;
 
-            // 싱글 모드일 때 스핀 버튼 숨기기 로직
             const rouletteBtn = document.getElementById('rouletteBtn');
             if (gameMode === 'single') {
                 rouletteBtn.style.display = 'none';
@@ -1033,8 +1149,6 @@
             gameDeck.forEach((imgUrl, i) => {
                 const card = document.createElement('div');
                 card.classList.add('card');
-                
-                //  카드의 초기 데이터 값 저장 (셔플 로직 개선을 위함)
                 card.dataset.value = imgUrl; 
 
                 card.classList.add('shuffling'); 
@@ -1043,7 +1157,6 @@
                     <div class="card-face card-back"><img src="${imgUrl}" alt="Card"></div>
                 `;
                 
-                // 클릭 이벤트 핸들러 개선
                 card.addEventListener('click', () => flipCard(card));
                 board.appendChild(card);
             });
@@ -1068,9 +1181,7 @@
             const scoreboard = document.getElementById('scoreboard');
             scoreboard.innerHTML = '';
 
-            if (gameMode === 'single') {
-                return; 
-            }
+            if (gameMode === 'single') return; 
 
             teams.forEach((team, index) => {
                 const scoreBox = document.createElement('div');
@@ -1082,7 +1193,7 @@
                     scoreBox.onclick = () => {
                         if (!isProcessing && currentTeamIndex !== index) {
                             currentTeamIndex = index;
-                            playClickSound();
+                            playClickSound(); 
                             renderScoreboard();
                         }
                     };
@@ -1108,15 +1219,11 @@
         }
 
         function flipCard(card) {
-            // dataset에서 현재 이미지 URL 읽기
             const currentImgUrl = card.dataset.value;
-
             if (card.classList.contains('flipped') || isProcessing || card.classList.contains('matched')) return;
 
-            playClickSound();
+            playClickSound(); 
             card.classList.add('flipped');
-            
-            // 객체 구조에 맞게 push
             flippedCards.push({ card: card, imgUrl: currentImgUrl });
 
             if (flippedCards.length === 2) {
@@ -1133,16 +1240,12 @@
                 cards: [first.card, second.card]
             };
 
-            // 이미지 URL 비교 방식
             if (first.imgUrl === second.imgUrl) {
                 playMatchSound();
                 teams[currentTeamIndex].score++;
                 renderScoreboard();
                 
-                undoStack.push({
-                    type: 'match',
-                    ...currentTurnInfo
-                });
+                undoStack.push({ type: 'match', ...currentTurnInfo });
 
                 setTimeout(() => {
                     const currentColor = teams[currentTeamIndex].color;
@@ -1168,10 +1271,7 @@
                     }
                 }, 200);
             } else {
-                undoStack.push({
-                    type: 'fail',
-                    ...currentTurnInfo
-                });
+                undoStack.push({ type: 'fail', ...currentTurnInfo });
 
                 setTimeout(() => { playFailSound(); }, 400);
                 setTimeout(() => {
@@ -1218,16 +1318,14 @@
             }
         }
 
-        // === 룰렛 기능 함수 ===
         function openRoulette() {
             if (isProcessing) return;
             const modal = document.getElementById('roulette-modal');
             const wheel = document.getElementById('rouletteWheel');
             const spinBtn = document.getElementById('spinBtn');
             
-            spinBtn.disabled = false; // 버튼 활성화
+            spinBtn.disabled = false; 
             
-            // 현재 팀 색상으로 conic-gradient 생성
             let gradientStr = 'conic-gradient(';
             const segmentSize = 360 / totalTeams;
             
@@ -1239,44 +1337,36 @@
             gradientStr += ')';
             
             wheel.style.background = gradientStr;
-            // 회전 초기화
             wheel.style.transform = `rotate(${rouletteCurrentRot}deg)`;
-            
             modal.classList.remove('hidden');
         }
 
         function spinRoulette() {
             const wheel = document.getElementById('rouletteWheel');
             const spinBtn = document.getElementById('spinBtn');
-            spinBtn.disabled = true; // 중복 클릭 방지
+            spinBtn.disabled = true; 
 
-            // 랜덤 회전 각도 계산
             const randomDeg = Math.floor(1800 + Math.random() * 1800); 
             rouletteCurrentRot += randomDeg;
             
             wheel.style.transform = `rotate(${rouletteCurrentRot}deg)`;
-            playClickSound(); // 시작 소리
 
-            // 회전이 끝난 후 결과 계산
             setTimeout(() => {
                 const actualDeg = rouletteCurrentRot % 360;
                 const pointerDeg = (360 - actualDeg) % 360;
                 const segmentSize = 360 / totalTeams;
                 
                 let winningTeamIndex = Math.floor(pointerDeg / segmentSize);
-                
                 if (winningTeamIndex >= totalTeams) winningTeamIndex = 0;
 
-                playWinSound(); // 당첨 효과음
+                playWinSound(); 
                 
-                // 결과 적용 (턴 변경)
                 currentTeamIndex = winningTeamIndex;
                 renderScoreboard();
                 
-                // 버튼 다시 활성화 (다시 돌리기 가능)
                 spinBtn.disabled = false;
 
-            }, 4000); // 4초 후 결과 처리
+            }, 4000); 
         }
 
         function closeRoulette() {
@@ -1328,11 +1418,9 @@
             return pool.slice(0, count);
         }
 
-        // 셔플 로직 전면 수정
         function shuffleBoard() {
             if(isProcessing) return;
             
-            // 1. 상태 초기화 (힌트 모드 끄기, 선택 중인 카드 닫기)
             if(isHintActive) toggleHint();
             if (flippedCards.length > 0) {
                 flippedCards.forEach(item => {
@@ -1344,32 +1432,24 @@
             const board = document.getElementById('gameBoard');
             const allCards = Array.from(board.children);
             
-            // 2. 이미 맞춘 카드는 제외하고 섞기 (게임 진행 상황 보존)
             const unmatchedCards = allCards.filter(card => !card.classList.contains('matched'));
             
-            if (unmatchedCards.length === 0) return; // 섞을 카드가 없음
+            if (unmatchedCards.length === 0) return; 
 
-            // 3. 애니메이션 시작
             unmatchedCards.forEach(card => card.classList.add('shuffling'));
 
             setTimeout(() => {
-                // 4. 카드의 "내용(이미지 URL)"만 추출
                 const currentImages = unmatchedCards.map(card => card.dataset.value);
-                
-                // 5. 이미지 URL 배열을 무작위로 섞음
                 shuffleArray(currentImages);
                 
-                // 6. 섞인 이미지를 순서대로 카드에 다시 할당
-                // (DOM 요소 자체는 이동하지 않으므로 번호(1, 2, 3...) 위치는 그대로 유지됨)
                 unmatchedCards.forEach((card, index) => {
                     const newImgUrl = currentImages[index];
-                    card.dataset.value = newImgUrl; // 데이터 속성 갱신
-                    card.querySelector('.card-back img').src = newImgUrl; // 실제 이미지 소스 갱신
+                    card.dataset.value = newImgUrl; 
+                    card.querySelector('.card-back img').src = newImgUrl; 
                 });
 
             }, 300);
 
-            // 7. 애니메이션 종료
             setTimeout(() => {
                 unmatchedCards.forEach(card => card.classList.remove('shuffling'));
             }, 600);
